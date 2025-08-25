@@ -1,0 +1,11 @@
+FROM golang:1.21-alpine AS build
+WORKDIR /app
+COPY . .
+RUN go build -o cache-server ./cmd/cache-server
+
+FROM alpine:3.20
+WORKDIR /app
+COPY --from=build /app/cache-server /usr/local/bin/cache-server
+EXPOSE 8080
+ENV PORT=8080 CAP=200000
+CMD ["cache-server"]
