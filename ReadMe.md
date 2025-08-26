@@ -1,13 +1,34 @@
-# DistCache (v1)
+# DistCache
 
-Single-node in-memory cache with LRU + TTL and HTTP API.
+A lightweight **distributed in-memory cache** written in Go.  
+Features **LRU eviction**, **TTL expiration**, and a simple **HTTP API**.  
+Scales horizontally across nodes using **consistent hashing + virtual nodes (vnodes)** with client-side routing.
 
-## Run
+---
+
+## Features
+- In-memory key-value cache with:
+  - **LRU eviction policy** (O(1) get/set)
+  - **TTL expiration**
+- **HTTP API** for `GET`, `PUT`, `DELETE`, and health checks
+- **Prometheus metrics** for hits, misses, evictions, TTL expirations, and latency
+- **Consistent hashing with vnodes** for even key distribution across nodes
+- **CLI router** for transparent multi-node access
+- Benchmarked at **80K+ QPS per node** on cache hits (sub-ms latency)
+
+---
+
+### Run a single cache server
 ```bash
 go run ./cmd/cache-server
-# Put with TTL=5s
-curl -X PUT "localhost:8080/cache/foo?ttl=5s" -d 'hello'
-# Get
-curl localhost:8080/cache/foo
-# Delete
-curl -X DELETE localhost:8080/cache/foo
+
+---
+
+### Run multi-cache servers
+
+PORT=8080 go run ./cmd/cache-server
+PORT=8081 go run ./cmd/cache-server
+PORT=8082 go run ./cmd/cache-server
+
+Benchmarked between 30k (cache read, write, misses) and 80k (read only) QPS
+
