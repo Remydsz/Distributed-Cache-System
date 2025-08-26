@@ -18,14 +18,13 @@ Scales horizontally across nodes using **consistent hashing + virtual nodes (vno
 
 ---
 
-### Run a single cache server
+### How to run
+
+To run a single server:
 ```bash
 go run ./cmd/cache-server
 
----
-
-### Run multi-cache servers
-
+Run multiple:
 PORT=8080 go run ./cmd/cache-server
 PORT=8081 go run ./cmd/cache-server
 PORT=8082 go run ./cmd/cache-server
