@@ -8,6 +8,7 @@ import (
 
 	httpsrv "distcache/internal/server/http"
 	"distcache/internal/cache"
+	_ "distcache/internal/metrics"
 )
 
 func main() {

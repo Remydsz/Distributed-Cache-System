@@ -4,6 +4,8 @@ import (
 	"container/list"
 	"sync"
 	"time"
+
+	"distcache/internal/metrics"
 )
 
 type entry struct {
@@ -34,14 +36,19 @@ func (c *LRU) Get(key string) ([]byte, bool) {
 
 	e, ok := c.m[key]
 	if !ok {
+		metrics.CacheMisses.Inc()
 		return nil, false
 	}
 	// TTL check
 	if !e.exp.IsZero() && time.Now().After(e.exp) {
+		metrics.CacheExpired.Inc()
 		c.remove(e)
+		metrics.CacheMisses.Inc()
+		metrics.CacheSize.Set(float64(len(c.m)))
 		return nil, false
 	}
 	c.ll.MoveToFront(e.el)
+	metrics.CacheHits.Inc()
 	return e.val, true
 }
 
@@ -58,22 +65,24 @@ func (c *LRU) Set(key string, val []byte, ttl time.Duration) {
 	e := &entry{key: key, val: val, exp: expireAt(ttl)}
 	e.el = c.ll.PushFront(e)
 	c.m[key] = e
-
 	if len(c.m) > c.cap {
 		c.evictOne()
 	}
+	metrics.CacheSize.Set(float64(len(c.m)))
 }
 
 func (c *LRU) Delete(key string) {
 	c.mu.Lock()
 	if e, ok := c.m[key]; ok {
 		c.remove(e)
+		metrics.CacheSize.Set(float64(len(c.m)))
 	}
 	c.mu.Unlock()
 }
 
 func (c *LRU) evictOne() {
 	if back := c.ll.Back(); back != nil {
+		metrics.CacheEvictions.Inc()
 		c.remove(back.Value.(*entry))
 	}
 }
